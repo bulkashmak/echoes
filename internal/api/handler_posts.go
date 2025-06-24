@@ -11,7 +11,7 @@ import (
 
 type CreatePostRequest struct {
 	Body   string    `json:"body"`
-	UserID uuid.UUID `json:"userId"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
 type CreatePostResponse struct {
@@ -19,7 +19,7 @@ type CreatePostResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	Body      string    `json:"body"`
-	UserID    uuid.UUID `json:"userId"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 var profaneWords = map[string]bool{
@@ -40,6 +40,11 @@ func (cfg *APIConfig) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 	if len(req.Body) > 140 {
 		RespondWithError(w, http.StatusBadRequest, "Post is too long")
 		return
+	}
+
+	_, err := cfg.DB.GetUserByID(r.Context(), req.UserID)
+	if err != nil {
+		RespondWithError(w, http.StatusNotFound, "User not found")
 	}
 
 	cleanedBody := cleanPost(req.Body)

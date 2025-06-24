@@ -8,3 +8,8 @@ VALUES (gen_random_uuid(),
 -- name: DeleteAllUsers :exec
 DELETE
 FROM users;
+
+-- name: GetUserByID :one
+SELECT *
+FROM users
+WHERE users.id = $1;
