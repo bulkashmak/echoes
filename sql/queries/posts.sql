@@ -5,3 +5,13 @@ VALUES (gen_random_uuid(),
         NOW(),
         $1,
         $2) RETURNING *;
+
+-- name: ListPosts :many
+SELECT *
+FROM posts
+ORDER BY posts.created_at;
+
+-- name: RetrievePostByID :one
+SELECT *
+FROM posts
+WHERE posts.id = $1;

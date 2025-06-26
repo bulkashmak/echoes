@@ -14,7 +14,7 @@ type CreatePostRequest struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
-type CreatePostResponse struct {
+type Post struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -56,7 +56,7 @@ func (cfg *APIConfig) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	RespondWithJSON(w, http.StatusCreated, CreatePostResponse{
+	RespondWithJSON(w, http.StatusCreated, Post{
 		ID:        post.ID,
 		CreatedAt: post.CreatedAt,
 		UpdatedAt: post.UpdatedAt,
