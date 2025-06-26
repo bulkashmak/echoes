@@ -4,11 +4,18 @@ import (
 	"encoding/json"
 	"github.com/bulkashmak/echoes/internal/auth"
 	"net/http"
+	"time"
 )
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	TokenTTLSeconds int    `json:"expires_in_seconds"`
+}
+
+type LoginResponse struct {
+	User
+	Token string `json:"token"`
 }
 
 func (cfg *APIConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -32,10 +39,28 @@ func (cfg *APIConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RespondWithJSON(w, http.StatusOK, User{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email:     user.Email,
+	ttl := parseTTL(req.TokenTTLSeconds)
+	token, err := auth.MakeJWT(user.ID, cfg.AuthSecret, ttl)
+	if err != nil {
+		RespondWithError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	RespondWithJSON(w, http.StatusOK, LoginResponse{
+		User: User{
+			ID:        user.ID,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Email:     user.Email,
+		},
+		Token: token,
 	})
+}
+
+func parseTTL(ttlSeconds int) time.Duration {
+	if ttlSeconds <= 0 || ttlSeconds > 60 {
+		return time.Hour
+	}
+
+	return time.Duration(ttlSeconds)
 }

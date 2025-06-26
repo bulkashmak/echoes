@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/bulkashmak/echoes/internal/auth"
 	"github.com/bulkashmak/echoes/internal/database"
 	"github.com/google/uuid"
 	"net/http"
@@ -10,8 +11,7 @@ import (
 )
 
 type CreatePostRequest struct {
-	Body   string    `json:"body"`
-	UserID uuid.UUID `json:"user_id"`
+	Body string `json:"body"`
 }
 
 type Post struct {
@@ -31,6 +31,8 @@ var profaneWords = map[string]bool{
 func (cfg *APIConfig) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	userID := authenticate(w, r, cfg)
+
 	var req CreatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
@@ -42,15 +44,16 @@ func (cfg *APIConfig) HandleCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := cfg.DB.GetUserByID(r.Context(), req.UserID)
+	user, err := cfg.DB.GetUserByID(r.Context(), userID)
 	if err != nil {
 		RespondWithError(w, http.StatusNotFound, "User not found")
+		return
 	}
 
 	cleanedBody := cleanPost(req.Body)
 	post, err := cfg.DB.CreatePost(r.Context(), database.CreatePostParams{
 		Body:   cleanedBody,
-		UserID: req.UserID,
+		UserID: user.ID,
 	})
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, err.Error())
@@ -74,4 +77,18 @@ func cleanPost(body string) string {
 		}
 	}
 	return strings.Join(words, " ")
+}
+
+func authenticate(w http.ResponseWriter, r *http.Request, cfg *APIConfig) uuid.UUID {
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		RespondWithError(w, http.StatusUnauthorized, err.Error())
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.AuthSecret)
+	if err != nil {
+		RespondWithError(w, http.StatusUnauthorized, err.Error())
+	}
+
+	return userID
 }

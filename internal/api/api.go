@@ -12,6 +12,7 @@ import (
 
 type APIConfig struct {
 	DB             *database.Queries
+	AuthSecret     string
 	FileServerHits atomic.Int32
 }
 

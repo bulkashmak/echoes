@@ -22,11 +22,20 @@ func main() {
 	}
 
 	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		panic("DB_URL environment variable not set")
+	}
 	db, err := sql.Open("postgres", dbURL)
 	dbQueries := database.New(db)
 
+	authSecret := os.Getenv("AUTH_SECRET")
+	if authSecret == "" {
+		panic("AUTH_SECRET environment variable not set")
+	}
+
 	apiCfg := api.APIConfig{
-		DB: dbQueries,
+		DB:         dbQueries,
+		AuthSecret: authSecret,
 	}
 
 	mux := http.NewServeMux()
