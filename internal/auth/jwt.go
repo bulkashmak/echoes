@@ -9,7 +9,8 @@ import (
 
 var ErrInvalidToken = errors.New("invalid token")
 
-func MakeJWT(userID uuid.UUID, secret string, ttl time.Duration) (string, error) {
+func MakeJWT(userID uuid.UUID, secret string) (string, error) {
+	ttl := time.Hour
 	now := time.Now().UTC()
 	claims := jwt.RegisteredClaims{
 		Issuer:    "echoes",

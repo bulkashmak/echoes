@@ -23,7 +23,7 @@ func CheckPasswordHash(password, hash string) error {
 func GetBearerToken(headers http.Header) (string, error) {
 	token := headers.Get("Authorization")
 	if token == "" {
-		return "", errors.New("authorization header not found")
+		return "", errors.New("'Authorization' header not found")
 	}
 	if !strings.HasPrefix(token, "Bearer ") {
 		return "", errors.New("invalid token")

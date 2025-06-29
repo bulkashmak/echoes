@@ -1,21 +1,25 @@
 package api
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"github.com/bulkashmak/echoes/internal/auth"
+	"github.com/bulkashmak/echoes/internal/database"
+	"github.com/google/uuid"
 	"net/http"
 	"time"
 )
 
 type LoginRequest struct {
-	Email           string `json:"email"`
-	Password        string `json:"password"`
-	TokenTTLSeconds int    `json:"expires_in_seconds"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type LoginResponse struct {
 	User
-	Token string `json:"token"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (cfg *APIConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -39,10 +43,15 @@ func (cfg *APIConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ttl := parseTTL(req.TokenTTLSeconds)
-	token, err := auth.MakeJWT(user.ID, cfg.AuthSecret, ttl)
+	token, err := auth.MakeJWT(user.ID, cfg.AuthSecret)
 	if err != nil {
 		RespondWithError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	refreshToken, err := createRefreshToken(r.Context(), cfg, user.ID)
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -53,14 +62,27 @@ func (cfg *APIConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			UpdatedAt: user.UpdatedAt,
 			Email:     user.Email,
 		},
-		Token: token,
+		Token:        token,
+		RefreshToken: refreshToken.Token,
 	})
 }
 
-func parseTTL(ttlSeconds int) time.Duration {
-	if ttlSeconds <= 0 || ttlSeconds > 60 {
-		return time.Hour
+func createRefreshToken(ctx context.Context, cfg *APIConfig, userID uuid.UUID) (database.RefreshToken, error) {
+	ttl := 60 * 24 * time.Hour
+	refreshTokenStr, err := auth.MakeRefreshToken()
+	if err != nil {
+		return database.RefreshToken{}, err
 	}
 
-	return time.Duration(ttlSeconds)
+	refreshToken, err := cfg.DB.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
+		Token:     refreshTokenStr,
+		UserID:    userID,
+		ExpiresAt: time.Now().Add(ttl),
+		RevokedAt: sql.NullTime{},
+	})
+	if err != nil {
+		return database.RefreshToken{}, err
+	}
+
+	return refreshToken, nil
 }

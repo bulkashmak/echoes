@@ -17,7 +17,8 @@ VALUES (gen_random_uuid(),
         NOW(),
         NOW(),
         $1,
-        $2) RETURNING id, created_at, updated_at, email, password_hash
+        $2)
+RETURNING id, created_at, updated_at, email, password_hash
 `
 
 type CreateUserParams struct {
@@ -75,6 +76,26 @@ WHERE users.id = $1
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.PasswordHash,
+	)
+	return i, err
+}
+
+const getUserFromRefreshToken = `-- name: GetUserFromRefreshToken :one
+SELECT u.id, u.created_at, u.updated_at, u.email, u.password_hash
+FROM users u
+         JOIN refresh_tokens rf ON u.id = rf.user_id
+WHERE rf.token = $1
+`
+
+func (q *Queries) GetUserFromRefreshToken(ctx context.Context, token string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserFromRefreshToken, token)
 	var i User
 	err := row.Scan(
 		&i.ID,

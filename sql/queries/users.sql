@@ -4,7 +4,8 @@ VALUES (gen_random_uuid(),
         NOW(),
         NOW(),
         $1,
-        $2) RETURNING *;
+        $2)
+RETURNING *;
 
 -- name: DeleteAllUsers :exec
 DELETE
@@ -19,3 +20,9 @@ WHERE users.id = $1;
 SELECT *
 FROM users
 WHERE users.email = $1;
+
+-- name: GetUserFromRefreshToken :one
+SELECT u.*
+FROM users u
+         JOIN refresh_tokens rf ON u.id = rf.user_id
+WHERE rf.token = $1;
