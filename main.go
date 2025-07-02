@@ -33,9 +33,15 @@ func main() {
 		panic("AUTH_SECRET environment variable not set")
 	}
 
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == "" {
+		panic("POLKA_KEY environment variable not set")
+	}
+
 	apiCfg := api.APIConfig{
 		DB:         dbQueries,
 		AuthSecret: authSecret,
+		PolkaKey:   polkaKey,
 	}
 
 	mux := http.NewServeMux()

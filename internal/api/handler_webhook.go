@@ -1,6 +1,8 @@
 package api
 
 import (
+	"strings"
+	"errors"
 	"encoding/json"
 	"net/http"
 
@@ -21,6 +23,11 @@ func (cfg *APIConfig) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
+	key, err := GetAPIKey(r.Header)
+	if err != nil || key != cfg.PolkaKey {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+
 	req := request{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -31,12 +38,23 @@ func (cfg *APIConfig) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := cfg.DB.UpdateEchoesRed(r.Context(), req.Data.UserID)
+	_, err = cfg.DB.UpdateEchoesRed(r.Context(), req.Data.UserID)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func GetAPIKey(headers http.Header) (string, error) {
+	key := headers.Get("Authorization")
+	if key == "" {
+		return "", errors.New("'Authorization' header not found")
+	}
+	if !strings.HasPrefix(key, "ApiKey ") {
+		return "", errors.New("invalid token")
+	}
+	return strings.TrimPrefix(key, "ApiKey "), nil
 }
 
