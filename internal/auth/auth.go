@@ -2,9 +2,11 @@ package auth
 
 import (
 	"errors"
-	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func HashPassword(password string) (string, error) {
@@ -12,6 +14,8 @@ func HashPassword(password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	log.Println("password hashed successfuly")
 
 	return string(hash), nil
 }

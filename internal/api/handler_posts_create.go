@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/bulkashmak/echoes/internal/auth"
 	"github.com/bulkashmak/echoes/internal/database"
 	"github.com/google/uuid"
 	"net/http"
@@ -79,16 +78,3 @@ func cleanPost(body string) string {
 	return strings.Join(words, " ")
 }
 
-func authenticate(w http.ResponseWriter, r *http.Request, cfg *APIConfig) uuid.UUID {
-	token, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		RespondWithError(w, http.StatusUnauthorized, err.Error())
-	}
-
-	userID, err := auth.ValidateJWT(token, cfg.AuthSecret)
-	if err != nil {
-		RespondWithError(w, http.StatusUnauthorized, err.Error())
-	}
-
-	return userID
-}

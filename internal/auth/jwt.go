@@ -27,7 +27,7 @@ func MakeJWT(userID uuid.UUID, secret string) (string, error) {
 func ValidateJWT(tokenString string, secret string) (uuid.UUID, error) {
 	claims := &jwt.RegisteredClaims{}
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken
 		}

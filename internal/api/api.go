@@ -3,7 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/bulkashmak/echoes/internal/database"
+	"github.com/bulkashmak/echoes/internal/auth"
 	"log"
 	"net/http"
 	"os"
@@ -49,6 +51,7 @@ func (cfg *APIConfig) HandleReset(w http.ResponseWriter, r *http.Request) {
 	env := os.Getenv("ENV")
 	if env == "" {
 		RespondWithError(w, http.StatusInternalServerError, "Environment variable not set")
+		return
 	} else if env != "dev" {
 		w.WriteHeader(http.StatusForbidden)
 	}
@@ -69,7 +72,7 @@ func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	}
 }
 
-func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	err := json.NewEncoder(w).Encode(payload)
@@ -77,3 +80,22 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 		log.Printf("Error encoding response: %v", err)
 	}
 }
+
+func authenticate(w http.ResponseWriter, r *http.Request, cfg *APIConfig) uuid.UUID {
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		RespondWithError(w, http.StatusUnauthorized, err.Error())
+		return uuid.Nil
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.AuthSecret)
+	if err != nil {
+		RespondWithError(w, http.StatusUnauthorized, err.Error())
+		return uuid.Nil
+	}
+
+	log.Printf("user with id '%s' authenticated successfuly", userID)
+
+	return userID
+}
+

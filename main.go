@@ -50,6 +50,7 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", apiCfg.HandleRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.HandleRevoke)
 	mux.HandleFunc("POST /api/users", apiCfg.HandleCreateUser)
+	mux.HandleFunc("PUT  /api/users", apiCfg.HandleUpdateUser)
 	mux.HandleFunc("POST /api/chirps", apiCfg.HandleCreatePost)
 	mux.HandleFunc("GET  /api/chirps", apiCfg.HandleRetrievePosts)
 	mux.HandleFunc("GET  /api/chirps/{chirpID}", apiCfg.HandleRetrievePostByID)
@@ -57,6 +58,7 @@ func main() {
 	mux.HandleFunc("GET  /admin/metrics", apiCfg.HandleMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.HandleReset)
 
-	log.Printf("Listening on port %s\n", port)
+	log.Printf("listening on port %s\n", port)
 	log.Fatal(server.ListenAndServe())
 }
+
