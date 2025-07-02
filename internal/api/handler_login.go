@@ -57,10 +57,11 @@ func (cfg *APIConfig) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	RespondWithJSON(w, http.StatusOK, LoginResponse{
 		User: User{
-			ID:        user.ID,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Email:     user.Email,
+			ID:          user.ID,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
+			Email:       user.Email,
+			IsEchoesRed: user.IsEchoesRed,
 		},
 		Token:        token,
 		RefreshToken: refreshToken.Token,

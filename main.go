@@ -57,6 +57,8 @@ func main() {
 	mux.HandleFunc("GET    /api/chirps", apiCfg.HandleRetrievePosts)
 	mux.HandleFunc("GET    /api/chirps/{chirpID}", apiCfg.HandleRetrievePostByID)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.HandleDeletePost)
+	
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.HandleWebhook)
 
 	mux.HandleFunc("GET  /api/healthz", api.HandleReadiness)
 	mux.HandleFunc("GET  /admin/metrics", apiCfg.HandleMetrics)

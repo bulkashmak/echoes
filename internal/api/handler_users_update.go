@@ -62,10 +62,11 @@ func (cfg *APIConfig) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 
   RespondWithJSON(w, http.StatusOK, response{
 		User: User{
-      ID:        user.ID,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Email:     user.Email,
+      ID:          user.ID,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
+			Email:       user.Email,
+			IsEchoesRed: user.IsEchoesRed,
 		}, 
 	})
 }
