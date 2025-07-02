@@ -18,7 +18,7 @@ VALUES (gen_random_uuid(),
         NOW(),
         $1,
         $2)
-RETURNING id, created_at, updated_at, email, password_hash
+RETURNING id, created_at, updated_at, email, password_hash, is_echoes_red
 `
 
 type CreateUserParams struct {
@@ -35,6 +35,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
+		&i.IsEchoesRed,
 	)
 	return i, err
 }
@@ -50,7 +51,7 @@ func (q *Queries) DeleteAllUsers(ctx context.Context) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, created_at, updated_at, email, password_hash
+SELECT id, created_at, updated_at, email, password_hash, is_echoes_red
 FROM users
 WHERE users.email = $1
 `
@@ -64,12 +65,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
+		&i.IsEchoesRed,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, created_at, updated_at, email, password_hash
+SELECT id, created_at, updated_at, email, password_hash, is_echoes_red
 FROM users
 WHERE users.id = $1
 `
@@ -83,12 +85,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
+		&i.IsEchoesRed,
 	)
 	return i, err
 }
 
 const getUserFromRefreshToken = `-- name: GetUserFromRefreshToken :one
-SELECT u.id, u.created_at, u.updated_at, u.email, u.password_hash
+SELECT u.id, u.created_at, u.updated_at, u.email, u.password_hash, u.is_echoes_red
 FROM users u
          JOIN refresh_tokens rf ON u.id = rf.user_id
 WHERE rf.token = $1
@@ -103,6 +106,29 @@ func (q *Queries) GetUserFromRefreshToken(ctx context.Context, token string) (Us
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
+		&i.IsEchoesRed,
+	)
+	return i, err
+}
+
+const updateEchoesRed = `-- name: UpdateEchoesRed :one
+UPDATE users
+SET updated_at = NOW(),
+    is_echoes_red = true
+WHERE id = $1
+RETURNING id, created_at, updated_at, email, password_hash, is_echoes_red
+`
+
+func (q *Queries) UpdateEchoesRed(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateEchoesRed, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.PasswordHash,
+		&i.IsEchoesRed,
 	)
 	return i, err
 }
@@ -110,7 +136,7 @@ func (q *Queries) GetUserFromRefreshToken(ctx context.Context, token string) (Us
 const updateUserEmailAndPasswordByID = `-- name: UpdateUserEmailAndPasswordByID :one
 UPDATE users SET email = $2, password_hash = $3, updated_at = NOW()
 WHERE id = $1
-RETURNING id, created_at, updated_at, email, password_hash
+RETURNING id, created_at, updated_at, email, password_hash, is_echoes_red
 `
 
 type UpdateUserEmailAndPasswordByIDParams struct {
@@ -128,6 +154,7 @@ func (q *Queries) UpdateUserEmailAndPasswordByID(ctx context.Context, arg Update
 		&i.UpdatedAt,
 		&i.Email,
 		&i.PasswordHash,
+		&i.IsEchoesRed,
 	)
 	return i, err
 }

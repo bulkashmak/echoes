@@ -32,3 +32,10 @@ UPDATE users SET email = $2, password_hash = $3, updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 
+-- name: UpdateEchoesRed :one
+UPDATE users
+SET updated_at = NOW(),
+    is_echoes_red = true
+WHERE id = $1
+RETURNING *;
+

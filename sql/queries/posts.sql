@@ -15,3 +15,8 @@ ORDER BY posts.created_at;
 SELECT *
 FROM posts
 WHERE posts.id = $1;
+
+-- name: DeletePostByID :exec
+DELETE FROM posts
+WHERE posts.id = $1;
+
