@@ -1,6 +1,7 @@
 package api
 
 import (
+	"sort"
 	"net/http"
 
 	"github.com/bulkashmak/echoes/internal/database"
@@ -11,6 +12,7 @@ func (cfg *APIConfig) HandleRetrievePosts(w http.ResponseWriter, r *http.Request
 	defer r.Body.Close()
 
 	authorID := r.URL.Query().Get("author_id")
+	ssort := r.URL.Query().Get("sort")
 
   var posts []database.Post
 	var err error
@@ -28,6 +30,18 @@ func (cfg *APIConfig) HandleRetrievePosts(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	if ssort != "" {
+		if ssort == "asc" {
+			sort.Slice(posts, func(i, j int) bool {
+				return posts[i].CreatedAt.Before(posts[j].CreatedAt)
+			})
+		} else if ssort == "desc" { 
+			sort.Slice(posts, func(i, j int) bool {
+				return posts[j].CreatedAt.Before(posts[i].CreatedAt)
+			})
+		}
 	}
 
 	var resp []Post
