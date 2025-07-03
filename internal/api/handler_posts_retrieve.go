@@ -1,14 +1,30 @@
 package api
 
 import (
-	"github.com/google/uuid"
 	"net/http"
+
+	"github.com/bulkashmak/echoes/internal/database"
+	"github.com/google/uuid"
 )
 
 func (cfg *APIConfig) HandleRetrievePosts(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	posts, err := cfg.DB.ListPosts(r.Context())
+	authorID := r.URL.Query().Get("author_id")
+
+  var posts []database.Post
+	var err error
+
+	if authorID != "" {
+		userID, parseErr := uuid.Parse(authorID)
+		if parseErr != nil {
+			RespondWithError(w, http.StatusBadRequest, "Invalid author_id")
+			return
+		}
+		posts, err = cfg.DB.ListPostsByAuthor(r.Context(), userID)
+	} else {
+		posts, err = cfg.DB.ListPosts(r.Context())
+	}
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -52,3 +68,4 @@ func (cfg *APIConfig) HandleRetrievePostByID(w http.ResponseWriter, r *http.Requ
 		UserID:    post.UserID,
 	})
 }
+

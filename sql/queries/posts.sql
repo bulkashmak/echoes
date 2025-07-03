@@ -11,6 +11,11 @@ SELECT *
 FROM posts
 ORDER BY posts.created_at;
 
+-- name: ListPostsByAuthor :many
+SELECT * FROM posts
+WHERE user_id = $1
+ORDER BY created_at DESC;
+
 -- name: RetrievePostByID :one
 SELECT *
 FROM posts
