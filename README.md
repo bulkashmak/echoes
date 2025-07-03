@@ -16,7 +16,7 @@ Twitter clone
     POLKA_KEY=
     ```
 2. Run a Postgres. You can use docker compose, see `compose.yaml` file
-3. Run Goose UP migrations manually or via CMake, see `Makefile` file
+3. Run Goose UP migrations manually or via make, see `Makefile` file
     ```
     make migrate
     make migrate-down
